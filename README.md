@@ -1,62 +1,79 @@
 # SelfHeal Hospitals
 
-A small React + Vite web app for hospital booking and administration, built with Firebase.
-
-## Features
-
-- Browse departments and doctors
-- Book appointments and view bookings
-- Authentication with Firebase
-- Admin view for managing data
-
-## Quickstart
-
-1. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-2. Copy `backend/.env.example` to `.env` and add any missing values, especially `GEMINI_API_KEY` if you want the chat API to be enabled.
-
-3. Create a Firebase project and add credentials (see `frontend/src/firebase.ts`).
-
-4. Run the development server:
-
-   ```bash
-   npm run dev
-   ```
-
-5. Build for production:
-
-   ```bash
-   npm run build
-   npm run start
-   ```
-
-6. Preview the production build locally:
-
-   ```bash
-   npm run preview
-   ```
+A full-stack web application for hospital management, built with Firebase and Vite + React.
 
 ## Project Structure
 
-- `frontend/` — React app, assets, and Vite frontend configuration
-- `frontend/build/` — production frontend build output
-- `backend/` — Express server and backend startup logic
-- `backend/dist/` — production backend bundle output
-- `firebase-blueprint.json` — example Firebase config/seed data
+```text
+.
+├── backend/
+│   └── server.ts
+├── frontend/
+│   ├── index.html
+│   ├── assets/
+│   │   └── build/
+│   │       ├── index-DBHdRLRB.css
+│   │       └── index-uOL_3sVm.js
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── data.ts
+│   │   ├── firebase.ts
+│   │   ├── index.css
+│   │   ├── main.tsx
+│   │   ├── types.ts
+│   │   ├── assets/
+│   │   │   └── images/
+│   │   └── components/
+│   │       ├── AboutView.tsx
+│   │       ├── AdminView.tsx
+│   │       ├── AIChatbot.tsx
+│   │       ├── AuthView.tsx
+│   │       ├── BookingForm.tsx
+│   │       ├── DepartmentsView.tsx
+│   │       ├── DoctorsView.tsx
+│   │       ├── FirebaseProvider.tsx
+│   │       ├── HomeView.tsx
+│   │       ├── MyBookingsView.tsx
+│   │       └── Navbar.tsx
+├── firebase-applet-config.json
+├── firebase-blueprint.json
+├── firestore.indexes.json
+├── firestore.rules
+├── metadata.json
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
 
-## Environment
+## Notes
 
-- Copy `.env.example` to `.env` and configure values before running locally.
-- This project expects Firebase configuration to be provided in `src/firebase.ts` or via environment variables used there.
-- When running locally, you can override the server port and HMR port with `PORT` and `HMR_PORT`.
+- `frontend/` contains the React application source and build assets.
+- `backend/` contains the server entrypoint.
+- Firebase configuration and rules files are stored at the repository root.
+- `package.json` and `tsconfig.json` configure dependencies and TypeScript settings.
 
-## Scripts
+## Admin Portal Access
 
-- `npm run dev` — start development server
-- `npm run build` — build client and bundle server
-- `npm run start` — run the bundled server
-- `npm run preview` — preview production build
+### Credentials
+
+| Field              | Value             |
+| ------------------ | ----------------- |
+| **Admin ID**       | `sampletest@1129` |
+| **Admin Password** | `test@123`        |
+
+### Admin Features
+
+- View and manage all patient bookings
+- Create new appointments on behalf of patients
+- Reschedule existing appointments
+- Confirm, reject, or cancel bookings
+- Track revenue and booking statistics
+- View patient medical history
+- Access secure admin dashboard with real-time data
+
+### How to Access
+
+1. Navigate to the application
+2. Click on the "Admin Portal" link in the navigation menu
+3. Enter the Admin ID and Password
+4. You will have full access to the administrative command center
