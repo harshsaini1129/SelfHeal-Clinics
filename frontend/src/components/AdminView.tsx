@@ -47,7 +47,7 @@ export default function AdminView() {
   const { user, signInWithEmail, signOut, signInWithGoogle } = useAuth();
 
   // Credentials requested by user:
-  const ADMIN_EMAIL = "sampletest@1129";
+  const ADMIN_EMAIL = "sampletest1129@gmail.com";
   const ADMIN_PASSWORD = "test@123";
 
   // Auth local state for admin portal login
