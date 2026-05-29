@@ -216,7 +216,7 @@ export default function Navbar({ currentTab, onNavigate }: NavbarProps) {
                       Book New Appointment
                     </button>
 
-                    {user?.email?.toLowerCase() === "sampletest@1129" && (
+                    {user?.email?.toLowerCase() === "sampletest1129@gmail.com" && (
                       <button
                         onClick={() => {
                           onNavigate("admin");
