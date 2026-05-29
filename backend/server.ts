@@ -232,7 +232,7 @@ Below is the verified website navigation details and institutional knowledge you
     const vite = await createViteServerWithFallback(baseHmrPort);
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
+    const distPath = path.join(process.cwd(), "frontend", "build");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
