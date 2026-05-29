@@ -126,7 +126,7 @@ export default function AdminView() {
 
   // Check if current authenticated user is the verified admin
   const isCurrentlyAdmin =
-    user && user.email?.toLowerCase() === "sampletest@1129";
+    user && user.email?.toLowerCase() === "sampletest1129@gmail.com";
 
   // Watch & monitor clinical state across all patients using top-level collections
   useEffect(() => {
@@ -232,7 +232,7 @@ export default function AdminView() {
     const cleanPassword = adminPasswordInput.trim();
 
     const isEmailValidAdmin =
-      formattedEmail.toLowerCase() === "sampletest@1129";
+      formattedEmail.toLowerCase() === "sampletest1129@gmail.com";
 
     if (!isEmailValidAdmin || cleanPassword !== ADMIN_PASSWORD) {
       setAuthError("Unauthorized Admin credentials. Access Denied.");
@@ -637,7 +637,7 @@ export default function AdminView() {
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setAdminEmailInput(e.target.value)
                     }
-                    placeholder="e.g. sampletest@1129"
+                    placeholder="e.g. sampletest1129@gmail.com"
                     className="w-full bg-brand-sand border border-brand-olivelight rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-brand-charcoal outline-none focus:ring-1 focus:ring-brand-olive focus:border-brand-olive transition-colors"
                     required
                   />
