@@ -1,13 +1,19 @@
 import express from "express";
+import net from "net";
 import path from "path";
 import { createServer as createViteServer } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
 
+const FRONTEND_ROOT = path.resolve(process.cwd(), "frontend");
+const VITE_CONFIG_FILE = path.resolve(process.cwd(), "vite.config.ts");
+
 const DEFAULT_PORT = 3000;
-const DEFAULT_HMR_PORT = 24678;
+const DEFAULT_HMR_PORT = 0;
 const HMR_PORT_ATTEMPTS = 5;
 
 function listenWithFallback(
@@ -28,38 +34,87 @@ function listenWithFallback(
   });
 }
 
-async function createViteServerWithFallback(basePort: number) {
-  for (let attempt = 0; attempt < HMR_PORT_ATTEMPTS; attempt += 1) {
-    const port = basePort + attempt;
-    try {
-      console.log(`Trying Vite HMR port ${port}`);
-      return await createViteServer({
-        server: {
-          middlewareMode: true,
-          hmr: {
-            protocol: "ws",
-            port,
-          },
-        },
-        appType: "spa",
-      });
-    } catch (err: any) {
-      if (
-        err?.code === "EADDRINUSE" ||
-        /EADDRINUSE/.test(String(err?.message))
-      ) {
-        console.warn(
-          `HMR port ${port} is already in use, trying port ${port + 1}...`,
+function findFreePort(basePort: number, attempts = 5): Promise<number> {
+  return new Promise((resolve, reject) => {
+    let current = basePort;
+
+    const tryPort = () => {
+      if (current >= basePort + attempts) {
+        reject(
+          new Error(
+            `Unable to find a free port from ${basePort} to ${basePort + attempts - 1}`,
+          ),
         );
-        continue;
+        return;
       }
-      throw err;
+
+      const server = net.createServer();
+      server.once("error", (err: any) => {
+        server.close();
+        if (err.code === "EADDRINUSE") {
+          current += 1;
+          tryPort();
+        } else {
+          reject(err);
+        }
+      });
+      server.once("listening", () => {
+        const freePort = current;
+        server.close(() => resolve(freePort));
+      });
+      server.listen(current, "0.0.0.0");
+    };
+
+    tryPort();
+  });
+}
+
+async function createViteServerWithFallback(basePort: number) {
+  let port = basePort;
+  if (port === 0) {
+    console.log("Using OS-assigned free HMR port");
+  } else {
+    try {
+      port = await findFreePort(basePort, HMR_PORT_ATTEMPTS);
+      console.log(`Using Vite HMR port ${port}`);
+    } catch (err: any) {
+      console.warn(
+        `Unable to reserve requested HMR port ${basePort}: ${err.message}. Falling back to OS-assigned HMR port.`,
+      );
+      port = 0;
     }
   }
 
-  throw new Error(
-    `Unable to bind Vite HMR to any port from ${basePort} to ${basePort + HMR_PORT_ATTEMPTS - 1}`,
-  );
+  try {
+    return await createViteServer({
+      root: FRONTEND_ROOT,
+      configFile: VITE_CONFIG_FILE,
+      server: {
+        middlewareMode: true,
+        hmr: {
+          protocol: "ws",
+          port,
+        },
+      },
+      appType: "spa",
+    });
+  } catch (err: any) {
+    if (err?.code === "EADDRINUSE" || /EADDRINUSE/.test(String(err?.message))) {
+      console.warn(
+        `HMR port ${port} is unavailable at Vite startup. Disabling HMR as a fallback.`,
+      );
+      return await createViteServer({
+        root: FRONTEND_ROOT,
+        configFile: VITE_CONFIG_FILE,
+        server: {
+          middlewareMode: true,
+          hmr: false,
+        },
+        appType: "spa",
+      });
+    }
+    throw err;
+  }
 }
 
 async function startServer() {
