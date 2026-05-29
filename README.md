@@ -17,9 +17,9 @@ A small React + Vite web app for hospital booking and administration, built with
    npm install
    ```
 
-2. Copy `.env.example` to `.env` and add any missing values, especially `GEMINI_API_KEY` if you want the chat API to be enabled.
+2. Copy `backend/.env.example` to `.env` and add any missing values, especially `GEMINI_API_KEY` if you want the chat API to be enabled.
 
-3. Create a Firebase project and add credentials (see `src/firebase.ts`).
+3. Create a Firebase project and add credentials (see `frontend/src/firebase.ts`).
 
 4. Run the development server:
 
@@ -42,8 +42,10 @@ A small React + Vite web app for hospital booking and administration, built with
 
 ## Project Structure
 
-- `src/` — React app source files (components, assets, entry points)
-- `server.ts` — Simple dev/SSR server used by `npm run dev` and build
+- `frontend/` — React app, assets, and Vite frontend configuration
+- `frontend/build/` — production frontend build output
+- `backend/` — Express server and backend startup logic
+- `backend/dist/` — production backend bundle output
 - `firebase-blueprint.json` — example Firebase config/seed data
 
 ## Environment
