@@ -1,0 +1,8 @@
+{
+  "name": "SelfHeal Hospitals",
+  "description": "A modern and clean healthcare platform for SelfHeal Hospitals, featuring specialized departments, professional medical doctors, and a real-time booking, cancellation, and rescheduling engine.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

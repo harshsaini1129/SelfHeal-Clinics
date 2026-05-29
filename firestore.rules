@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global reuseable helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (request.auth.token.email == "harshsaini1129@gamil.com" || request.auth.token.email == "harshsaini1129@gmail.com");
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // UserProfile schema verification
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['userId', 'fullName', 'email'])
+        && data.keys().size() <= 6
+        && data.userId == request.auth.uid
+        && data.fullName is string && data.fullName.size() <= 120
+        && data.email is string && data.email.size() <= 120
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 40))
+        && (!('createdAt' in data) || data.createdAt is timestamp);
+    }
+
+    // Booking reservation schema verification
+    function isValidBooking(data, pathUserId) {
+      return data.keys().hasAll(['id', 'userId', 'patientName', 'patientEmail', 'patientPhone', 'doctorId', 'departmentId', 'date', 'timeSlot', 'status', 'createdAt'])
+        && data.keys().size() <= 16
+        && data.id is string && data.id.size() <= 128
+        && data.userId == pathUserId
+        && data.patientName is string && data.patientName.size() <= 200
+        && data.patientEmail is string && data.patientEmail.size() <= 200
+        && data.patientPhone is string && data.patientPhone.size() <= 100
+        && data.doctorId is string && data.doctorId.size() <= 128
+        && data.departmentId is string && data.departmentId.size() <= 128
+        && data.date is string && data.date.size() <= 100
+        && data.timeSlot is string && data.timeSlot.size() <= 100
+        && data.status in ['Pending', 'Confirmed', 'Cancelled', 'Rescheduled', 'Rejected', 'pending', 'confirmed', 'cancelled', 'rescheduled', 'rejected']
+        && (!('reason' in data) || (data.reason is string && data.reason.size() <= 2000))
+        && (!('doctorName' in data) || (data.doctorName is string && data.doctorName.size() <= 200))
+        && (!('department' in data) || (data.department is string && data.department.size() <= 200))
+        && (data.createdAt is timestamp || data.createdAt is string);
+    }
+
+    // Flat path definitions to guarantee explicit matching without nested variable shadowing or caching anomalies.
+    match /users/{userId} {
+      allow read, write: if isAdmin();
+      allow get, list: if isOwner(userId);
+      
+      allow create: if isOwner(userId) && isValidUserProfile(incoming()) && incoming().createdAt == request.time;
+      allow update: if isOwner(userId) && isValidUserProfile(incoming()) && incoming().userId == existing().userId;
+      allow delete: if false;
+    }
+
+    match /bookings/{bookingId} {
+      allow read, write: if isAdmin();
+      allow get, list: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && isOwner(incoming().userId)
+        && isValidId(bookingId)
+        && isValidBooking(incoming(), incoming().userId)
+        && (incoming().createdAt == request.time || incoming().createdAt is string);
+
+      allow update: if isOwner(existing().userId)
+        && isValidId(bookingId)
+        && isValidBooking(incoming(), existing().userId)
+        && (!('createdAt' in existing()) || incoming().createdAt == existing().createdAt)
+        && incoming().userId == existing().userId
+        && (
+          // Option A: Patient cancels or updates status of their own admission pass
+          ((incoming().status in ['Cancelled', 'cancelled', 'Pending', 'pending', 'Confirmed', 'confirmed', 'Rescheduled', 'rescheduled', 'Rejected', 'rejected']) && incoming().diff(existing()).affectedKeys().hasOnly(['status'])) ||
+          // Option B: Patient reschedules dates/times
+          ((incoming().status in ['Pending', 'Confirmed', 'Cancelled', 'Rescheduled', 'pending', 'confirmed', 'cancelled', 'rescheduled', 'Rejected', 'rejected']) && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'date', 'timeSlot']))
+        );
+
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "entities": {
+    "userProfile": {
+      "title": "UserProfile",
+      "description": "User account registration details.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Unique Firebase Authentication UID of the user."
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Full name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Contact email address."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Direct contact phone number."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp indicating when the profile was generated."
+        }
+      },
+      "required": ["userId", "fullName", "email"]
+    },
+    "booking": {
+      "title": "Booking",
+      "description": "Patient's reserved admission slot pass.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique ID of the booking ticket."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Owner user UID who created this booking."
+        },
+        "patientName": {
+          "type": "string",
+          "description": "Name of the person being admitted."
+        },
+        "patientEmail": {
+          "type": "string",
+          "description": "Email address of the patient."
+        },
+        "patientPhone": {
+          "type": "string",
+          "description": "Phone number of the patient."
+        },
+        "doctorId": {
+          "type": "string",
+          "description": "Identifier of the physician specialist."
+        },
+        "departmentId": {
+          "type": "string",
+          "description": "Identifier of the medical department."
+        },
+        "doctorName": {
+          "type": "string",
+          "description": "Physician specialist name."
+        },
+        "department": {
+          "type": "string",
+          "description": "Medical department name."
+        },
+        "date": {
+          "type": "string",
+          "description": "Reserved appointment clinical date."
+        },
+        "timeSlot": {
+          "type": "string",
+          "description": "Selected consultation time slot."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for the medical appointment."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Confirmed", "Cancelled", "Rescheduled", "Rejected", "pending", "confirmed", "cancelled", "rescheduled", "rejected"],
+          "description": "Current state of the admission pass."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when resource was created."
+        }
+      },
+      "required": ["id", "userId", "patientName", "patientEmail", "patientPhone", "doctorId", "departmentId", "date", "timeSlot", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "userProfile",
+      "description": "Public and private user account profiles."
+    },
+    "/bookings/{bookingId}": {
+      "schema": "booking",
+      "description": "Global collection of admission bookings."
+    }
+  }
+}
