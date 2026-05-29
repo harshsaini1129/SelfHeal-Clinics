@@ -117,7 +117,10 @@ export default function AdminView() {
   ) => {
     setNotification({ message, type });
     setTimeout(() => {
-      setNotification((curr: { message: string; type: 'success' | 'error' } | null) => (curr?.message === message ? null : curr));
+      setNotification(
+        (curr: { message: string; type: "success" | "error" } | null) =>
+          curr?.message === message ? null : curr,
+      );
     }, 4500);
   };
 
@@ -631,7 +634,9 @@ export default function AdminView() {
                   <input
                     type="text"
                     value={adminEmailInput}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAdminEmailInput(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setAdminEmailInput(e.target.value)
+                    }
                     placeholder="e.g. sampletest@1129"
                     className="w-full bg-brand-sand border border-brand-olivelight rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold text-brand-charcoal outline-none focus:ring-1 focus:ring-brand-olive focus:border-brand-olive transition-colors"
                     required
