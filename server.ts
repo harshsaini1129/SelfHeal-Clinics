@@ -6,28 +6,87 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const PORT = 3000;
+const DEFAULT_PORT = 3000;
+const DEFAULT_HMR_PORT = 24678;
+const HMR_PORT_ATTEMPTS = 5;
+
+function listenWithFallback(
+  app: express.Express,
+  port: number,
+  attempts = 5,
+): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port, "0.0.0.0", () => resolve(port));
+    server.on("error", (err: any) => {
+      if (err.code === "EADDRINUSE" && attempts > 0) {
+        console.warn(`Port ${port} is in use; trying port ${port + 1}...`);
+        resolve(listenWithFallback(app, port + 1, attempts - 1));
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
+
+async function createViteServerWithFallback(basePort: number) {
+  for (let attempt = 0; attempt < HMR_PORT_ATTEMPTS; attempt += 1) {
+    const port = basePort + attempt;
+    try {
+      console.log(`Trying Vite HMR port ${port}`);
+      return await createViteServer({
+        server: {
+          middlewareMode: true,
+          hmr: {
+            protocol: "ws",
+            port,
+          },
+        },
+        appType: "spa",
+      });
+    } catch (err: any) {
+      if (
+        err?.code === "EADDRINUSE" ||
+        /EADDRINUSE/.test(String(err?.message))
+      ) {
+        console.warn(
+          `HMR port ${port} is already in use, trying port ${port + 1}...`,
+        );
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw new Error(
+    `Unable to bind Vite HMR to any port from ${basePort} to ${basePort + HMR_PORT_ATTEMPTS - 1}`,
+  );
+}
 
 async function startServer() {
   const app = express();
   app.use(express.json());
 
-  // Initialize Gemini client safely
   const apiKey = process.env.GEMINI_API_KEY;
-  const ai = new GoogleGenAI({
-    apiKey: apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      }
-    }
-  });
+  let ai: GoogleGenAI | null = null;
 
-  // Ensure a health check or check if key is set
+  if (apiKey) {
+    ai = new GoogleGenAI({
+      apiKey: apiKey,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+  } else {
+    console.warn("GEMINI_API_KEY is not set. API chat will be disabled.");
+  }
+
   app.get("/api/health", (req, res) => {
     res.json({
       status: "ok",
-      apiKeyConfigured: !!apiKey
+      apiKeyConfigured: !!apiKey,
+      chatEnabled: !!ai,
     });
   });
 
@@ -39,9 +98,10 @@ async function startServer() {
         return res.status(400).json({ error: "Message is required." });
       }
 
-      if (!apiKey) {
-        return res.status(500).json({
-          error: "Gemini API Key is missing. Please add it to your environment secrets or .env file."
+      if (!ai) {
+        return res.status(503).json({
+          error:
+            "Gemini API Key is not configured. Chat API is disabled in this environment.",
         });
       }
 
@@ -50,14 +110,14 @@ async function startServer() {
       if (history && Array.isArray(history)) {
         history.forEach((msg: any) => {
           contents.push({
-            role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.text }]
+            role: msg.role === "user" ? "user" : "model",
+            parts: [{ text: msg.text }],
           });
         });
       }
       contents.push({
-        role: 'user',
-        parts: [{ text: message }]
+        role: "user",
+        parts: [{ text: message }],
       });
 
       const systemInstruction = `You are "HealBot", an empathetic, professional, and highly knowledgeable AI Clinical Navigating Assistant for SelfHeal Hospitals.
@@ -97,35 +157,36 @@ Below is the verified website navigation details and institutional knowledge you
         config: {
           systemInstruction: systemInstruction,
           temperature: 0.7,
-        }
+        },
       });
 
       res.json({ text: response.text });
     } catch (error: any) {
       console.error("Chat API Error:", error);
-      res.status(500).json({ error: error.message || "An error occurred during generation." });
+      res.status(500).json({
+        error: error.message || "An error occurred during generation.",
+      });
     }
   });
 
   // Vite middleware setup
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
+    const baseHmrPort = Number(process.env.HMR_PORT) || DEFAULT_HMR_PORT;
+    console.log(`Starting dev server with HMR base port ${baseHmrPort}`);
+
+    const vite = await createViteServerWithFallback(baseHmrPort);
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
-  const PORT_NUM = Number(process.env.PORT) || PORT;
-  app.listen(PORT_NUM, "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT_NUM}`);
-  });
+  const PORT_NUM = Number(process.env.PORT) || DEFAULT_PORT;
+  const actualPort = await listenWithFallback(app, PORT_NUM);
+  console.log(`Server running on port ${actualPort}`);
 }
 
 startServer().catch((err) => {

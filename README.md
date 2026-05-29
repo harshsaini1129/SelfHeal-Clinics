@@ -17,22 +17,24 @@ A small React + Vite web app for hospital booking and administration, built with
    npm install
    ```
 
-2. Create a Firebase project and add credentials (see `src/firebase.ts`).
+2. Copy `.env.example` to `.env` and add any missing values, especially `GEMINI_API_KEY` if you want the chat API to be enabled.
 
-3. Run the development server:
+3. Create a Firebase project and add credentials (see `src/firebase.ts`).
+
+4. Run the development server:
 
    ```bash
    npm run dev
    ```
 
-4. Build for production:
+5. Build for production:
 
    ```bash
    npm run build
    npm run start
    ```
 
-5. Preview the production build locally:
+6. Preview the production build locally:
 
    ```bash
    npm run preview
@@ -46,7 +48,9 @@ A small React + Vite web app for hospital booking and administration, built with
 
 ## Environment
 
+- Copy `.env.example` to `.env` and configure values before running locally.
 - This project expects Firebase configuration to be provided in `src/firebase.ts` or via environment variables used there.
+- When running locally, you can override the server port and HMR port with `PORT` and `HMR_PORT`.
 
 ## Scripts
 
@@ -54,4 +58,3 @@ A small React + Vite web app for hospital booking and administration, built with
 - `npm run build` — build client and bundle server
 - `npm run start` — run the bundled server
 - `npm run preview` — preview production build
-
