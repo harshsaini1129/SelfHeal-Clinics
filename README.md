@@ -58,7 +58,7 @@ A full-stack web application for hospital management, built with Firebase and Vi
 
 | Field              | Value             |
 | ------------------ | ----------------- |
-| **Admin ID**       | `sampletest@1129` |
+| **Admin ID**       | `sampletest1129@gmail.com` |
 | **Admin Password** | `test@123`        |
 
 ### Admin Features
